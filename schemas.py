@@ -1,48 +1,43 @@
 """
-Database Schemas
+Database Schemas for Gaming Cafe SaaS
 
-Define your MongoDB collection schemas here using Pydantic models.
-These schemas are used for data validation in your application.
-
-Each Pydantic model represents a collection in your database.
-Model name is converted to lowercase for the collection name:
-- User -> "user" collection
-- Product -> "product" collection
-- BlogPost -> "blogs" collection
+Collections:
+- user: customers, admins, cafe owners (simple role field for now)
+- cafe: gaming cafes listed on the platform
+- slot: time slots per cafe that customers can book
+- booking: reservations made by customers for specific slots
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional
-
-# Example schemas (replace with your own):
+from typing import Optional, Literal
 
 class User(BaseModel):
-    """
-    Users collection schema
-    Collection name: "user" (lowercase of class name)
-    """
     name: str = Field(..., description="Full name")
     email: str = Field(..., description="Email address")
-    address: str = Field(..., description="Address")
-    age: Optional[int] = Field(None, ge=0, le=120, description="Age in years")
-    is_active: bool = Field(True, description="Whether user is active")
+    role: Literal["customer", "owner", "admin"] = Field("customer", description="Access role")
+    phone: Optional[str] = Field(None, description="Phone number")
+    is_active: bool = Field(True, description="Active status")
 
-class Product(BaseModel):
-    """
-    Products collection schema
-    Collection name: "product" (lowercase of class name)
-    """
-    title: str = Field(..., description="Product title")
-    description: Optional[str] = Field(None, description="Product description")
-    price: float = Field(..., ge=0, description="Price in dollars")
-    category: str = Field(..., description="Product category")
-    in_stock: bool = Field(True, description="Whether product is in stock")
+class Cafe(BaseModel):
+    name: str = Field(..., description="Cafe name")
+    city: str = Field(..., description="City or locality")
+    address: str = Field(..., description="Street address")
+    cover_image: Optional[str] = Field(None, description="Cover image URL")
+    description: Optional[str] = Field(None, description="Short description")
+    owner_id: Optional[str] = Field(None, description="Owner user id")
 
-# Add your own schemas here:
-# --------------------------------------------------
+class Slot(BaseModel):
+    cafe_id: str = Field(..., description="Cafe id")
+    date: str = Field(..., description="YYYY-MM-DD")
+    start_time: str = Field(..., description="HH:MM 24h")
+    end_time: str = Field(..., description="HH:MM 24h")
+    price: float = Field(..., ge=0, description="Price for the slot")
+    status: Literal["available", "booked"] = Field("available", description="Slot status")
 
-# Note: The Flames database viewer will automatically:
-# 1. Read these schemas from GET /schema endpoint
-# 2. Use them for document validation when creating/editing
-# 3. Handle all database operations (CRUD) directly
-# 4. You don't need to create any database endpoints!
+class Booking(BaseModel):
+    cafe_id: str = Field(..., description="Cafe id")
+    slot_id: str = Field(..., description="Slot id")
+    customer_name: str = Field(..., description="Customer name")
+    customer_email: str = Field(..., description="Customer email")
+    customer_phone: Optional[str] = Field(None, description="Customer phone")
+    status: Literal["pending", "confirmed", "cancelled"] = Field("confirmed", description="Booking status")
